@@ -5,7 +5,8 @@
     android:id="@+id/folioPageFragment"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    android:fitsSystemWindows="true">
 
     <FrameLayout
         android:id="@+id/webViewLayout"
@@ -48,6 +49,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_gravity="bottom"
         android:gravity="center"
         android:orientation="horizontal"
         android:paddingTop="2dp"
