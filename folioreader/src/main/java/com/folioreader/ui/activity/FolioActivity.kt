@@ -394,16 +394,20 @@ class FolioActivity : AppCompatActivity(), FolioActivityCallback, MediaControlle
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        createdMenu = menu
-        menuInflater.inflate(R.menu.menu_main, menu)
+        try {
+            createdMenu = menu
+            menuInflater.inflate(R.menu.menu_main, menu)
 
-        val config = AppUtil.getSavedConfig(applicationContext)!!
-        UiUtil.setColorIntToDrawable(config.currentThemeColor, menu.findItem(R.id.itemSearch).icon)
-        UiUtil.setColorIntToDrawable(config.currentThemeColor, menu.findItem(R.id.itemConfig).icon)
-        UiUtil.setColorIntToDrawable(config.currentThemeColor, menu.findItem(R.id.itemTts).icon)
+            val config = AppUtil.getSavedConfig(applicationContext)!!
+            UiUtil.setColorIntToDrawable(config.currentThemeColor, menu.findItem(R.id.itemSearch).icon)
+            UiUtil.setColorIntToDrawable(config.currentThemeColor, menu.findItem(R.id.itemConfig).icon)
+            UiUtil.setColorIntToDrawable(config.currentThemeColor, menu.findItem(R.id.itemTts).icon)
 
-        if (!config.isShowTts)
-            menu.findItem(R.id.itemTts).isVisible = false
+            if (!config.isShowTts)
+                menu.findItem(R.id.itemTts).isVisible = false
+        } catch (e: Exception) {
+            Log.e("FOLIOREADER", e.message);
+        }
 
         return true
     }

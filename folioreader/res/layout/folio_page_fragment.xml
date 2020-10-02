@@ -5,8 +5,7 @@
     android:id="@+id/folioPageFragment"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:fitsSystemWindows="true">
+    android:orientation="vertical">
 
     <FrameLayout
         android:id="@+id/webViewLayout"
@@ -62,13 +61,13 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textColor="#888888"
-            android:textSize="9sp" />
+            android:textSize="12sp" />
 
         <TextView
             android:id="@+id/pagesLeft"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textColor="#bbbbbb"
-            android:textSize="10sp" />
+            android:textSize="13sp" />
     </LinearLayout>
 </RelativeLayout>
