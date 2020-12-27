@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="290dp"
+    android:layout_height="250dp"
+    android:gravity="center"
+    android:background="@android:color/transparent"
+    android:orientation="vertical">
+
+    <RelativeLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@color/white"
+        android:padding="10dp"
+        android:visibility="visible">
+
+        <EditText
+            android:id="@+id/bookmark_name"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="12dp"
+            android:background="@drawable/note_edittext_background"
+            android:gravity="start"
+            android:hint="bookmark name"
+            android:inputType="textMultiLine"
+            android:lines="1"
+            android:padding="10dp"
+            android:scrollbars="vertical"
+            android:textColor="@android:color/black" />
+
+        <Button
+            android:id="@+id/btn_save_bookmark"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/bookmark_name"
+            android:layout_marginTop="8dp"
+            android:background="@color/default_theme_accent_color"
+            android:text="@string/save_bookmark"
+            android:textAllCaps="false"
+            android:textColor="@android:color/white"
+            android:textSize="16sp" />
+    </RelativeLayout>
+</RelativeLayout>

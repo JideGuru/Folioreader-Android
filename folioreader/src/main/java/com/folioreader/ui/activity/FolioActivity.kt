@@ -18,6 +18,7 @@ package com.folioreader.ui.activity
 import android.Manifest
 import android.app.Activity
 import android.app.ActivityManager
+import android.app.Dialog
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -29,13 +30,12 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
+import android.os.Parcelable
 import android.text.TextUtils
 import android.util.DisplayMetrics
 import android.util.Log
-import android.view.Menu
-import android.view.MenuItem
-import android.view.View
-import android.view.WindowManager
+import android.view.*
+import android.widget.EditText
 import android.widget.Toast
 import androidx.appcompat.app.ActionBar
 import androidx.appcompat.app.AppCompatActivity
@@ -54,6 +54,7 @@ import com.folioreader.model.HighlightImpl
 import com.folioreader.model.event.MediaOverlayPlayPauseEvent
 import com.folioreader.model.locators.ReadLocator
 import com.folioreader.model.locators.SearchLocator
+import com.folioreader.model.sqlite.BookmarkTable
 import com.folioreader.ui.adapter.FolioPageFragmentAdapter
 import com.folioreader.ui.adapter.SearchAdapter
 import com.folioreader.ui.fragment.FolioPageFragment
@@ -73,6 +74,8 @@ import org.readium.r2.streamer.parser.EpubParser
 import org.readium.r2.streamer.parser.PubBox
 import org.readium.r2.streamer.server.Server
 import java.lang.ref.WeakReference
+import java.text.SimpleDateFormat
+import java.util.*
 
 class FolioActivity : AppCompatActivity(), FolioActivityCallback, MediaControllerCallback,
     View.OnSystemUiVisibilityChangeListener {
@@ -91,6 +94,8 @@ class FolioActivity : AppCompatActivity(), FolioActivityCallback, MediaControlle
     private var mFolioPageFragmentAdapter: FolioPageFragmentAdapter? = null
     private var entryReadLocator: ReadLocator? = null
     private var lastReadLocator: ReadLocator? = null
+    private var bookmarkReadLocator: ReadLocator? = null
+
     private var outState: Bundle? = null
     private var savedInstanceState: Bundle? = null
 
@@ -130,6 +135,7 @@ class FolioActivity : AppCompatActivity(), FolioActivityCallback, MediaControlle
         const val EXTRA_SEARCH_ITEM = "EXTRA_SEARCH_ITEM"
         const val ACTION_SEARCH_CLEAR = "ACTION_SEARCH_CLEAR"
         private const val HIGHLIGHT_ITEM = "highlight_item"
+        private const val BOOKMARK_ITEM = "bookmark_item"
     }
 
     private val closeBroadcastReceiver = object : BroadcastReceiver() {
@@ -357,6 +363,7 @@ class FolioActivity : AppCompatActivity(), FolioActivityCallback, MediaControlle
 
         // Update toolbar colors
         createdMenu?.let { m ->
+            UiUtil.setColorIntToDrawable(config.themeColor, m.findItem(R.id.itemBookmark).icon)
             UiUtil.setColorIntToDrawable(config.themeColor, m.findItem(R.id.itemSearch).icon)
             UiUtil.setColorIntToDrawable(config.themeColor, m.findItem(R.id.itemConfig).icon)
             UiUtil.setColorIntToDrawable(config.themeColor, m.findItem(R.id.itemTts).icon)
@@ -381,6 +388,7 @@ class FolioActivity : AppCompatActivity(), FolioActivityCallback, MediaControlle
 
         // Update toolbar colors
         createdMenu?.let { m ->
+            UiUtil.setColorIntToDrawable(config.nightThemeColor, m.findItem(R.id.itemBookmark).icon)
             UiUtil.setColorIntToDrawable(config.nightThemeColor, m.findItem(R.id.itemSearch).icon)
             UiUtil.setColorIntToDrawable(config.nightThemeColor, m.findItem(R.id.itemConfig).icon)
             UiUtil.setColorIntToDrawable(config.nightThemeColor, m.findItem(R.id.itemTts).icon)
@@ -399,8 +407,18 @@ class FolioActivity : AppCompatActivity(), FolioActivityCallback, MediaControlle
             menuInflater.inflate(R.menu.menu_main, menu)
 
             val config = AppUtil.getSavedConfig(applicationContext)!!
-            UiUtil.setColorIntToDrawable(config.currentThemeColor, menu.findItem(R.id.itemSearch).icon)
-            UiUtil.setColorIntToDrawable(config.currentThemeColor, menu.findItem(R.id.itemConfig).icon)
+            UiUtil.setColorIntToDrawable(
+                    config.currentThemeColor,
+                    menu.findItem(R.id.itemBookmark).icon
+            )
+            UiUtil.setColorIntToDrawable(
+                    config.currentThemeColor,
+                    menu.findItem(R.id.itemSearch).icon
+            )
+            UiUtil.setColorIntToDrawable(
+                    config.currentThemeColor,
+                    menu.findItem(R.id.itemConfig).icon
+            )
             UiUtil.setColorIntToDrawable(config.currentThemeColor, menu.findItem(R.id.itemTts).icon)
 
             if (!config.isShowTts)
@@ -421,8 +439,46 @@ class FolioActivity : AppCompatActivity(), FolioActivityCallback, MediaControlle
             Log.v(LOG_TAG, "-> onOptionsItemSelected -> drawer")
             startContentHighlightActivity()
             return true
+        }
+        else if(itemId == R.id.itemBookmark){
+            val readLocator = currentFragment!!.getLastReadLocator()
+            Log.v(LOG_TAG, "-> onOptionsItemSelected 'if' -> bookmark")
 
-        } else if (itemId == R.id.itemSearch) {
+                bookmarkReadLocator = readLocator;
+                val localBroadcastManager = LocalBroadcastManager.getInstance(this)
+                val intent = Intent(FolioReader.ACTION_SAVE_READ_LOCATOR)
+                intent.putExtra(FolioReader.EXTRA_READ_LOCATOR, readLocator as Parcelable?)
+                localBroadcastManager.sendBroadcast(intent)
+                val dialog = Dialog(this, R.style.DialogCustomTheme)
+                dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
+                dialog.setContentView(R.layout.dialog_bookmark)
+                dialog.show()
+                dialog.setCanceledOnTouchOutside(true)
+                dialog.setOnCancelListener{
+                    Toast.makeText(this,
+                            "please enter a Bookmark name and then press Save",
+                            Toast.LENGTH_SHORT).show()
+                }
+                dialog.findViewById<View>(R.id.btn_save_bookmark).setOnClickListener {
+                    val name = (dialog.findViewById<View>(R.id.bookmark_name) as EditText).text.toString()
+                    if (!TextUtils.isEmpty(name)) {
+                        val simpleDateFormat = SimpleDateFormat(DATE_FORMAT, Locale.getDefault())
+                        val id =  BookmarkTable(this).insertBookmark(mBookId, simpleDateFormat.format(Date()), name, bookmarkReadLocator!!.toJson().toString());
+                        Toast.makeText(this,
+                                getString(R.string.book_mark_success),
+                                Toast.LENGTH_SHORT).show()
+                    } else {
+                        Toast.makeText(this,
+                                "please Enter a Bookmark name and then press Save",
+                                Toast.LENGTH_SHORT).show()
+                    }
+                    dialog.dismiss()
+                }
+
+
+            return true
+        }
+        else if (itemId == R.id.itemSearch) {
             Log.v(LOG_TAG, "-> onOptionsItemSelected -> " + item.title)
             if (searchUri == null)
                 return true
@@ -467,7 +523,7 @@ class FolioActivity : AppCompatActivity(), FolioActivityCallback, MediaControlle
         intent.putExtra(Constants.BOOK_TITLE, bookFileName)
 
         startActivityForResult(intent, RequestCode.CONTENT_HIGHLIGHT.value)
-        overridePendingTransition(R.anim.slide_in_up, R.anim.slide_out_up)
+        overridePendingTransition(R.anim.slide_in_left, R.anim.disappear)
     }
 
     fun showConfigBottomSheetDialogFragment() {
@@ -867,6 +923,17 @@ class FolioActivity : AppCompatActivity(), FolioActivityCallback, MediaControlle
                 mFolioPageViewPager!!.currentItem = currentChapterIndex
                 val folioPageFragment = currentFragment ?: return
                 folioPageFragment.scrollToHighlightId(highlightImpl.rangy)
+            }
+            else if(type == BOOKMARK_SELECTED){
+                val bookmark = data.getSerializableExtra(BOOKMARK_ITEM) as HashMap<String, String>
+                bookmarkReadLocator = ReadLocator.fromJson(bookmark.get("readlocator").toString())
+                currentChapterIndex = getChapterIndex(bookmarkReadLocator)
+                mFolioPageViewPager!!.setCurrentItem(currentChapterIndex)
+                val folioPageFragment = currentFragment
+                val handler_time = Handler()
+                handler_time.postDelayed({
+                    folioPageFragment!!.scrollToCFI(bookmarkReadLocator!!.locations.cfi.toString());
+                }, 1000)
             }
         }
     }
