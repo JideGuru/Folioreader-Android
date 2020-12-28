@@ -11,6 +11,8 @@ public class Constants {
     public static final String TYPE = "type";
     public static final String CHAPTER_SELECTED = "chapter_selected";
     public static final String HIGHLIGHT_SELECTED = "highlight_selected";
+    public static final String BOOKMARK_SELECTED = "bookmark_selected";
+
     public static final String BOOK_TITLE = "book_title";
 
     public static final String LOCALHOST = "http://127.0.0.1";
