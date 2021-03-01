@@ -895,6 +895,13 @@ class FolioPageFragment : Fragment(),
         }
     }
 
+    fun scrollToCFI(cfi: String) {
+        if (loadingView != null && loadingView!!.visibility != View.VISIBLE) {
+            loadingView!!.show()
+            mWebview!!.loadUrl(String.format(getString(R.string.callScrollToCfi), cfi))
+        }
+    }
+
     fun highlightSearchLocator(searchLocator: SearchLocator) {
         Log.v(LOG_TAG, "-> highlightSearchLocator")
         this.searchLocatorVisible = searchLocator
