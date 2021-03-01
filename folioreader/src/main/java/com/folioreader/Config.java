@@ -30,6 +30,7 @@ public class Config implements Parcelable {
     public static final String CONFIG_ALLOWED_DIRECTION = "allowed_direction";
     public static final String CONFIG_DIRECTION = "direction";
     public static final String CONFIG_REMAINING_INDICATOR = "show_remaining_indicator";
+    public static final String CONFIG_TEXT_SELECTION = "text_selection";
     private static final AllowedDirection DEFAULT_ALLOWED_DIRECTION = AllowedDirection.ONLY_VERTICAL;
     private static final Direction DEFAULT_DIRECTION = Direction.VERTICAL;
     private static final int DEFAULT_THEME_COLOR_INT =
@@ -42,6 +43,7 @@ public class Config implements Parcelable {
     private int themeColor = DEFAULT_THEME_COLOR_INT;
     private int nightThemeColor = themeColor;
     private boolean showTts = true;
+    private boolean showTextSelection = true;
     private AllowedDirection allowedDirection = DEFAULT_ALLOWED_DIRECTION;
     private Direction direction = DEFAULT_DIRECTION;
     private boolean showRemainingIndicator = false;
@@ -86,6 +88,7 @@ public class Config implements Parcelable {
         bundle.putInt(CONFIG_THEME_COLOR_INT, themeColor);
         bundle.putInt(CONFIG_NIGHT_THEME_COLOR_INT, nightThemeColor);
         bundle.putBoolean(CONFIG_IS_TTS, showTts);
+        bundle.putBoolean(CONFIG_TEXT_SELECTION, showTextSelection);
         bundle.putString(CONFIG_ALLOWED_DIRECTION, allowedDirection.toString());
         bundle.putString(CONFIG_DIRECTION, direction.toString());
         bundle.putBoolean(CONFIG_REMAINING_INDICATOR, showRemainingIndicator);
@@ -97,7 +100,7 @@ public class Config implements Parcelable {
             Bundle bundle = in.readBundle(getClass().getClassLoader());
             if (bundle == null) {
                 // set defaults because of an old configuration
-                System.out.println("Bundle does not exist, using default configuration.");
+                Log.i("Parse Error", "Bundle does not exist, using default configuration.");
                 setDefaults();
             } else {
                 font = getBundleItem(bundle, CONFIG_FONT, "Roboto");
@@ -106,6 +109,7 @@ public class Config implements Parcelable {
                 themeColor = getBundleItem(bundle, CONFIG_THEME_COLOR_INT, DEFAULT_THEME_COLOR_INT);
                 nightThemeColor = getBundleItem(bundle, CONFIG_NIGHT_THEME_COLOR_INT, DEFAULT_THEME_COLOR_INT);
                 showTts = getBundleItem(bundle, CONFIG_IS_TTS, true);
+                showTextSelection = getBundleItem(bundle, CONFIG_TEXT_SELECTION, showTextSelection);
                 allowedDirection = getAllowedDirectionFromString(
                         LOG_TAG,
                         getBundleItem(bundle, CONFIG_ALLOWED_DIRECTION, DEFAULT_ALLOWED_DIRECTION.toString())
@@ -117,7 +121,7 @@ public class Config implements Parcelable {
                 showRemainingIndicator = getBundleItem(bundle, CONFIG_REMAINING_INDICATOR, showRemainingIndicator);
             }
         } catch (Exception e) {
-            System.out.println("Failed to parse configuration, likely an old version.");
+            Log.i("Parse Error", "Bundle does not exist, using default configuration.");
             setDefaults();
         }
     }
@@ -132,6 +136,7 @@ public class Config implements Parcelable {
         allowedDirection = DEFAULT_ALLOWED_DIRECTION;
         direction = DEFAULT_DIRECTION;
         showRemainingIndicator = false;
+        showTextSelection = true;
     }
 
     @SuppressWarnings("unchecked")
@@ -149,13 +154,14 @@ public class Config implements Parcelable {
         try {
             font = getJsonItem(obj, CONFIG_FONT, "Roboto");
         } catch(Exception e) {
-            System.out.println("Failed to parse configuration, likely an old version.");
+            Log.i("Parse Error", "Bundle does not exist, using default configuration.");
         }
         fontSize = getJsonItem(obj, CONFIG_FONT_SIZE, 2);
         nightMode = getJsonItem(obj, CONFIG_IS_NIGHT_MODE, false);
         themeColor = getValidColorInt(getJsonItem(obj, CONFIG_THEME_COLOR_INT, DEFAULT_THEME_COLOR_INT));
         nightThemeColor = getValidColorInt(getJsonItem(obj, CONFIG_NIGHT_THEME_COLOR_INT, DEFAULT_THEME_COLOR_INT));
         showTts = getJsonItem(obj, CONFIG_IS_TTS, true);
+        showTextSelection = getJsonItem(obj, CONFIG_TEXT_SELECTION, true);
         allowedDirection = getAllowedDirectionFromString(
                 LOG_TAG,
                 getJsonItem(obj, CONFIG_ALLOWED_DIRECTION, DEFAULT_ALLOWED_DIRECTION.toString())
@@ -302,6 +308,16 @@ public class Config implements Parcelable {
         return this;
     }
 
+    public boolean isShowTextSelection() {
+        return showTextSelection;
+    }
+
+    public Config setShowTextSelection(boolean showTextSelection) {
+        this.showTextSelection = showTextSelection;
+        Log.i(LOG_TAG, "-> setShowTextSelection -> " + showTextSelection);
+        return this;
+    }
+
     public AllowedDirection getAllowedDirection() {
         return allowedDirection;
     }
@@ -402,6 +418,7 @@ public class Config implements Parcelable {
                 ", allowedDirection=" + allowedDirection +
                 ", direction=" + direction +
                 ", remainingIndicator=" + showRemainingIndicator +
+                ", showTextSelection=" + showTextSelection +
                 '}';
     }
 }

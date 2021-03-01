@@ -294,7 +294,7 @@ class FolioWebView : WebView {
         } else {
             ContextThemeWrapper(context, R.style.FolioDayTheme)
         }
-
+        Log.i(LOG_TAG, config.toString())
         viewTextSelection = LayoutInflater.from(ctw).inflate(R.layout.text_selection, null)
         viewTextSelection.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED)
 
@@ -816,42 +816,47 @@ class FolioWebView : WebView {
     }
 
     private fun showTextSelectionPopup() {
-        Log.v(LOG_TAG, "-> showTextSelectionPopup")
-        Log.d(LOG_TAG, "-> showTextSelectionPopup -> To be laid out popupRect -> $popupRect")
+        val config = AppUtil.getSavedConfig(context)!!
+        if(config.isShowTextSelection) {
+            Log.v(LOG_TAG, "-> showTextSelectionPopup")
+            Log.d(LOG_TAG, "-> showTextSelectionPopup -> To be laid out popupRect -> $popupRect")
+            popupWindow.dismiss()
+            oldScrollX = scrollX
+            oldScrollY = scrollY
 
-        popupWindow.dismiss()
-        oldScrollX = scrollX
-        oldScrollY = scrollY
+            isScrollingRunnable = Runnable {
+                uiHandler.removeCallbacks(isScrollingRunnable)
+                val currentScrollX = scrollX
+                val currentScrollY = scrollY
+                val inTouchMode = lastTouchAction == MotionEvent.ACTION_DOWN ||
+                        lastTouchAction == MotionEvent.ACTION_MOVE
 
-        isScrollingRunnable = Runnable {
-            uiHandler.removeCallbacks(isScrollingRunnable)
-            val currentScrollX = scrollX
-            val currentScrollY = scrollY
-            val inTouchMode = lastTouchAction == MotionEvent.ACTION_DOWN ||
-                    lastTouchAction == MotionEvent.ACTION_MOVE
-
-            if (oldScrollX == currentScrollX && oldScrollY == currentScrollY && !inTouchMode) {
-                Log.i(LOG_TAG, "-> Stopped scrolling, show Popup")
-                popupWindow.dismiss()
-                popupWindow = PopupWindow(viewTextSelection, WRAP_CONTENT, WRAP_CONTENT)
-                popupWindow.isClippingEnabled = false
-                popupWindow.showAtLocation(
-                    this@FolioWebView, Gravity.NO_GRAVITY,
-                    popupRect.left, popupRect.top
-                )
-            } else {
-                Log.i(LOG_TAG, "-> Still scrolling, don't show Popup")
-                oldScrollX = currentScrollX
-                oldScrollY = currentScrollY
-                isScrollingCheckDuration += IS_SCROLLING_CHECK_TIMER
-                if (isScrollingCheckDuration < IS_SCROLLING_CHECK_MAX_DURATION && !destroyed)
-                    uiHandler.postDelayed(isScrollingRunnable, IS_SCROLLING_CHECK_TIMER.toLong())
+                if (oldScrollX == currentScrollX && oldScrollY == currentScrollY && !inTouchMode) {
+                    Log.i(LOG_TAG, "-> Stopped scrolling, show Popup")
+                    popupWindow.dismiss()
+                    popupWindow = PopupWindow(viewTextSelection, WRAP_CONTENT, WRAP_CONTENT)
+                    popupWindow.isClippingEnabled = false
+                    popupWindow.showAtLocation(
+                        this@FolioWebView, Gravity.NO_GRAVITY,
+                        popupRect.left, popupRect.top
+                    )
+                } else {
+                    Log.i(LOG_TAG, "-> Still scrolling, don't show Popup")
+                    oldScrollX = currentScrollX
+                    oldScrollY = currentScrollY
+                    isScrollingCheckDuration += IS_SCROLLING_CHECK_TIMER
+                    if (isScrollingCheckDuration < IS_SCROLLING_CHECK_MAX_DURATION && !destroyed)
+                        uiHandler.postDelayed(isScrollingRunnable, IS_SCROLLING_CHECK_TIMER.toLong())
+                }
             }
+
+            uiHandler.removeCallbacks(isScrollingRunnable)
+            isScrollingCheckDuration = 0
+            if (!destroyed)
+                uiHandler.postDelayed(isScrollingRunnable, IS_SCROLLING_CHECK_TIMER.toLong())
+        } else {
+            Log.v(LOG_TAG, "-> doNotShowTextSelectionPopup")
         }
 
-        uiHandler.removeCallbacks(isScrollingRunnable)
-        isScrollingCheckDuration = 0
-        if (!destroyed)
-            uiHandler.postDelayed(isScrollingRunnable, IS_SCROLLING_CHECK_TIMER.toLong())
     }
 }

@@ -100,6 +100,7 @@ class AppUtil {
                 obj.put(Config.CONFIG_ALLOWED_DIRECTION, config.allowedDirection.toString())
                 obj.put(Config.CONFIG_DIRECTION, config.direction.toString())
                 obj.put(Config.CONFIG_REMAINING_INDICATOR, config.isShowRemainingIndicator)
+                obj.put(Config.CONFIG_TEXT_SELECTION, config.isShowTextSelection)
                 SharedPreferenceUtil.putSharedPreferencesString(
                     context, Config.INTENT_CONFIG,
                     obj.toString()
